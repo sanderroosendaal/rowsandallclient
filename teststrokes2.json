@@ -1,0 +1,24 @@
+{
+    "totalDistance": 100,
+    "elapsedTime": 29000,
+    "title": "Test Workout (GO)",
+    "startdatetime": "2023-01-16 17:54:35.588838+00:00",
+    "workouttype": "water",
+    "boattype": "1x",
+    "notes": "some\nnotes",
+    "strokes": {"data": [
+    {"distance":5, "power": 112, "hr": 132, "pace": 145800, "spm": 11, "time": 0, "latitude":52.2264097,"longitude":6.8493638},
+    {"distance":12, "power": 221, "hr": 131, "pace": 116400, "spm": 41, "time": 2200, "latitude":52.2263474,"longitude":6.8495814},
+    {"distance":19, "power": 511, "hr": 131, "pace": 88100, "spm": 56, "time": 4599, "latitude":52.2262715,"longitude":6.8496975},
+    {"distance":27, "power": 673, "hr": 132, "pace": 80400, "spm": 59, "time": 7000, "latitude":52.2262003,"longitude":6.8498095},
+    {"distance":35, "power": 744, "hr": 133, "pace": 77700, "spm": 55, "time": 9599, "latitude":52.2261312, "longitude":6.8499267},
+    {"distance":43, "power": 754, "hr": 136, "pace": 77400, "spm": 48, "time": 12000, "latitude":52.2260576,"longitude":6.8500366},
+    {"distance":51, "power": 754, "hr": 139, "pace": 77400, "spm": 48, "time": 14400, "latitude":52.2259872,"longitude":6.8501561},
+    {"distance":59, "power": 749, "hr": 142, "pace": 77600, "spm": 48, "time": 16799, "latitude":52.2259154,"longitude":6.8502769},
+    {"distance":67, "power": 729, "hr": 145, "pace": 78300, "spm": 48, "time": 19400, "latitude":52.2257749,"longitude":6.8503918},
+    {"distance":75, "power": 729, "hr": 147, "pace": 78300, "spm": 48, "time": 21799, "latitude":52.2259154,"longitude":6.8502769},
+    {"distance":82, "power": 726, "hr": 150, "pace": 78400, "spm": 48, "time": 24200, "latitude":52.2259872,"longitude":6.8501561},
+    {"distance":90, "power": 709, "hr": 152, "pace": 79000, "spm": 48, "time": 26599, "latitude":52.2260576,"longitude":6.8500366},
+    {"distance":100, "power": 707, "hr": 153, "pace": 79100, "spm": 49, "time": 29000, "latitude":52.2261312,"longitude":6.8499267}]}
+
+}
