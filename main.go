@@ -116,6 +116,8 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 // StrokeData v3
 func StrokeDataV3(w http.ResponseWriter, r *http.Request) {
 	url := "http://localhost:8000/rowers/api/v3/workouts/"
+	// url := "https://dev.rowsandall.com/rowers/api/v3/workouts/"
+	// url := "https://rowsandall.com/rowers/api/v3/workouts/"
 
 	var bearer = fmt.Sprintf("Bearer %s", stoken)
 
