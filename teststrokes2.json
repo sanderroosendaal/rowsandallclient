@@ -1,7 +1,7 @@
 {
-    "totalDistance": 100,
+    "distance": 100,
     "elapsedTime": 29000,
-    "title": "Test Workout (GO)",
+    "name": "Test Workout (GO, v3)",
     "startdatetime": "2023-01-16 17:54:35.588838+00:00",
     "workouttype": "water",
     "boattype": "1x",

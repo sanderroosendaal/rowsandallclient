@@ -66,13 +66,14 @@ type Strokes struct {
 
 // Workout for API v3
 type Workout struct {
-	Name        string `json:"title"`
+	Name        string `json:"name"`
 	WorkoutType string `json:"workouttype"`
 	BoatType string `json:"boattype"`
 	Notes string `json:"notes"`
 	StartDateTime   string `json:"startdatetime"`
-	Distance    int64  `json:"totalDistance"`
-	Duration    int64 `json:"elapsedTime"`
+	Distance    int64  `json:"distance"`
+	ElapsedTime    int64 `json:"elapsedTime"`
+	Duration    string `json:"duration"`
 	Strokes     Strokes `json:"strokes"`
 }
 
