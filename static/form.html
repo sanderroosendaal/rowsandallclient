@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Rowsandallclient</title>
+</head>
+<body>
+  <h1>Workout Form</h1>
+  <div>
+    <form
+      enctype="multipart/form-data"
+      action="/form"
+      method="post"
+    >
+      <p>
+	<label>Name</label><input name="name" type="text" value="" />
+      </p>
+      <p>
+	<label>Workout Type</label>
+	<select name="workouttype">
+	  <option>rower</option>
+	  <option>water</option>
+	</select>
+      </p>
+      <p>
+	<label>Boat Type</label>
+	<select name="boattype">
+	  <option>1x</option>
+	  <option>2x</option>
+	</select>
+      </p>
+      <p>
+	<textarea name="notes">Enter text here...</textarea>
+      </p>
+      <p>
+	<label>File</label><input type="file" name="myFile">
+      </p>
+      <p>
+	<input type="submit" value="submit" />
+      </p>
+  </form>
+</div>
+</body>
+</html>
