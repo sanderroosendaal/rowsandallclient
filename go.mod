@@ -3,7 +3,9 @@ module github.com/sanderroosendaal/rowsandallclient
 go 1.19
 
 require (
+	github.com/sanderroosendaal/gorow v0.0.0-20230117210112-c10fe60de2a3
 	golang.org/x/oauth2 v0.4.0
+	gopkg.in/yaml.v2 v2.2.2
 	moul.io/http2curl v1.0.0
 )
 
@@ -14,7 +16,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.10.5 // indirect
-	github.com/sanderroosendaal/gorow v0.0.0-20230117210112-c10fe60de2a3 // indirect
 	github.com/sgreben/piecewiselinear v1.1.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/xitongsys/parquet-go v1.6.0 // indirect

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"context"
 	"encoding/json"
+	"gopkg.in/yaml.v2"
 	"os"
 	"io"
 	"fmt"
@@ -62,6 +63,14 @@ var (
 
 var stoken string
 var refreshtoken string
+
+type Config struct {
+	ClientID string `yaml:"clientid"`
+	ClientSecret string `yaml:"clientsecret"`
+	RedirectURL string `yaml:redirecturl`
+	AuthURL string `yaml:authurl`
+	TokenURL string `yaml:tokenurl`
+}
 
 // WorkoutBody defines json for workout
 type WorkoutBody struct {
@@ -457,6 +466,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 	if instance == "prod" {
 		u_config = config_prod
 	}
+
 	token, err := u_config.Exchange(context.Background(), code)
 	stoken = token.AccessToken
 	refreshtoken = token.RefreshToken
@@ -477,6 +487,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 
 var instance = "local"
 var verbose = false
+var configfile = ""
 
 func main() {
 	stoken = "aap"
@@ -484,10 +495,40 @@ func main() {
 	// flags
 	flag.BoolVar(&(verbose), "v", false, "use -v to set verbose")
 	flag.StringVar(&(instance), "i", "local", "use -i instance to set instance (local, dev, prod)")
+	flag.StringVar(&(configfile), "c", "config.yaml", "use -c instance to set redirect config file")
 	flag.Parse()
 	if verbose {
 		log.Println(instance)
 		log.Println(time.Now().Format(time.RFC3339))		
+	}
+
+	if len(configfile)>0 {
+		if verbose {
+			fmt.Println(configfile)
+		}
+		file, err := ioutil.ReadFile(configfile)
+		if err != nil {
+			log.Printf("yamlFile.Get err   #%v ", err)
+		}
+		newconfig := Config{}
+		err = yaml.Unmarshal([]byte(file), &newconfig)
+		if err != nil {
+			log.Printf("yamlFile.Get err   #%v ", err)
+		}
+		bodyyaml, _ := yaml.Marshal(newconfig)
+		if verbose {
+			fmt.Printf("%s \n", []byte(bodyyaml))
+		}
+		instance = "local"
+		config = oauth2.Config{
+			ClientID: newconfig.ClientID,
+			ClientSecret: newconfig.ClientSecret,
+			RedirectURL: newconfig.RedirectURL,
+			Endpoint: oauth2.Endpoint{
+				AuthURL: newconfig.AuthURL,
+				TokenURL: newconfig.TokenURL,
+			},
+		}
 	}
 
 	// 1 - We attempt to hit our Homepage route
