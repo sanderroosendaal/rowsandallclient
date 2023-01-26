@@ -59,6 +59,9 @@ var (
 			TokenURL: "https://rowsandall.com/rowers/o/token/",
 		},
 	}
+	apiworkouts_url = "http://localhost:8000/rowers/api/workouts/"
+	apiv3_url = "http://localhost:8000/rowers/api/v3/workouts/"
+	apistrokedata_url = "http://localhost:8000/rowers/api/v2/workouts/%s/strokedata/"
 )
 
 var stoken string
@@ -70,6 +73,9 @@ type Config struct {
 	RedirectURL string `yaml:redirecturl`
 	AuthURL string `yaml:authurl`
 	TokenURL string `yaml:tokenurl`
+	ApiWorkouts string `yaml:apiworkouts`
+	ApiV3 string `yaml:apiv3`
+	ApiStrokeData string `yamml:apistrokedata`
 }
 
 // WorkoutBody defines json for workout
@@ -112,7 +118,6 @@ type Workout struct {
 	Strokes     Strokes `json:"strokes"`
 }
 
-// http://localhost:8000/rowers/o/authorize?client_id=QrpI3SQW4tijWPyfboVuvqnmgE3WAMnnvAuvTN5r&state=random_state_string&response_type=code
 
 // HomePage serves home page
 func HomePage(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +139,7 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 	if verbose {
 		log.Println("Requesting Workouts")
 	}
-	url := "http://localhost:8000/rowers/api/workouts/"
+	url := apiworkouts_url
 	if instance == "dev" {
 		url = "https://dev.rowsandall.com/rowers/api/workouts/"		
 	}
@@ -169,7 +174,7 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 
 // StrokeData v3
 func StrokeDataV3(w http.ResponseWriter, r *http.Request) {
-	url := "http://localhost:8000/rowers/api/v3/workouts/"
+	url := apiv3_url
 	if instance == "dev" {
 		url = "https://dev.rowsandall.com/rowers/api/v3/workouts/"		
 	}
@@ -219,7 +224,7 @@ func StrokeData(w http.ResponseWriter, r *http.Request) {
 	if verbose {
 		fmt.Println(id)
 	}
-	url := fmt.Sprintf("http://localhost:8000/rowers/api/v2/workouts/%s/strokedata/", id)
+	url := fmt.Sprintf(apistrokedata_url, id)
 	if instance == "dev" {
 		url = fmt.Sprintf("https://dev.rowsandall.com/rowers/api/v2/workouts/%s/strokedata/", id)
 	}
@@ -268,7 +273,7 @@ func AddWorkout(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Posting a workout")
 	}
 
-	url := "http://localhost:8000/rowers/api/workouts/"
+	url := apiworkouts_url
 	if instance == "dev" {
 		url = "https://dev.rowsandall.com/rowers/api/workouts/"		
 	}
@@ -320,7 +325,7 @@ func AddWorkout(w http.ResponseWriter, r *http.Request) {
 }
 
 func WorkoutForm(w http.ResponseWriter, r *http.Request) {
-	url := "http://localhost:8000/rowers/api/v3/workouts/"
+	url := apiv3_url
 	if instance == "dev" {
 		url = "https://dev.rowsandall.com/rowers/api/v3/workouts/"		
 	}
@@ -468,6 +473,9 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u_config.Exchange(context.Background(), code)
+	if err != nil {
+		log.Println("Error on token exchange\n", err)
+	}
 	stoken = token.AccessToken
 	refreshtoken = token.RefreshToken
 
@@ -528,6 +536,14 @@ func main() {
 				AuthURL: newconfig.AuthURL,
 				TokenURL: newconfig.TokenURL,
 			},
+		}
+		apiworkouts_url = newconfig.ApiWorkouts
+		apiv3_url = newconfig.ApiV3
+		apistrokedata_url = newconfig.ApiStrokeData
+		if verbose {
+			log.Println(apiworkouts_url)
+			log.Println(apiv3_url)
+			log.Println(apistrokedata_url)
 		}
 	}
 

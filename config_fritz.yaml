@@ -2,5 +2,8 @@
 clientid: X2Qujtr1Mvr7hU1sEf07iGZi3HjyYnj4gQuhJGew
 clientsecret: kjPq7OrR8THTGQZMFpsOo27n0uiDfI9HoxXhhbnbYWX9l2W34p6iESuLRu4VYuB58rlGxPdxRNPE8enfGDzlMhH6VPEadnJrtxnJoO491tyvyOtudkfp2JoKUTIEtq7M
 redirecturl: http://rowingmonitor.fritz.box:9094/oauth2
-authurl: http://localhost:8000/rowers/o/authorize/
-tokenurl: http://localhost:8000/rowers/o/token/
+authurl: http://dunav.ngrok.io/rowers/o/authorize/
+tokenurl: http://dunav.ngrok.io/rowers/o/token/
+apiworkouts: http://dunav.ngrok.io/rowers/api/workouts/
+apiv3: http://dunav.ngrok.io/rowers/api/v3/workouts/
+apistrokedata: http://dunav.ngrok.io/rowers/api/v2/workouts/%s/strokedata/
