@@ -20,48 +20,10 @@ import (
 )
 
 var (
-	config = oauth2.Config{
-		ClientID: "YCQ1hVjdRECtin2NN75HHPjlni63uAHUWbgNEcGT", // local
-		ClientSecret: "LKiXu7dL1biHtM84kMtYZnGbcbokWJVyA0tVPc9laRWJjpzFaNwTZmYruN7iGH6wVYC1kiH9HbxekWGL59XLBY3AVew5R3xNKgPfwq8G1LNglrriyBRPZXKFQTdjxOCx", // local
-		// Scopes:       []string{"read,write"},
-		RedirectURL: "http://localhost:9094/oauth2",
-		// This points to our Authorization Server
-		// if our Client ID and Client Secret are valid
-		// it will attempt to authorize our user
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "http://localhost:8000/rowers/o/authorize/",
-			TokenURL: "http://localhost:8000/rowers/o/token/",
-		},
-	}
-	config_dev = oauth2.Config{
-		ClientID: "d3EXkobGFIdWOWkPwgXyth8So3CdVTEQLZGVw8qh", // dev
-		ClientSecret: "wCg2brL8wDXhXcUTRDqoWm2h4naw8WORNUDHHO5dQ1AqBR62w8qsCmYrucMJHGWJ36OXJZqhZwyAy4to92ACdlNo6jayipwG98eP5hdsc213zPSleJgOFilYAECvtjE2", // dev
-		// Scopes:       []string{"read,write"},
-		RedirectURL: "http://localhost:9094/oauth2",
-		// This points to our Authorization Server
-		// if our Client ID and Client Secret are valid
-		// it will attempt to authorize our user
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://dev.rowsandall.com/rowers/o/authorize/",
-			TokenURL: "https://dev.rowsandall.com/rowers/o/token/",
-		},
-	}
-	config_prod = oauth2.Config{
-		ClientID: "SpecU3qiWht3mVk5VAXYPsaryW1PnsyuAecCTWcZ", // prod
-		ClientSecret: "Oh9lUhw5YeTekFy5fYT4Qj2Je4qqBcduMzvOQgA2JWlJw3Pom575KmFGPR6GOdf43vxRmOgdxSPuzqS9N2XMvNVyacgQjtHULsf96t3ouqkacIBlZGPT8jh1pA5ZSV1M", // prod
-		// Scopes:       []string{"read,write"},
-		RedirectURL: "http://localhost:9094/oauth2",
-		// This points to our Authorization Server
-		// if our Client ID and Client Secret are valid
-		// it will attempt to authorize our user
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://rowsandall.com/rowers/o/authorize/",
-			TokenURL: "https://rowsandall.com/rowers/o/token/",
-		},
-	}
-	apiworkouts_url = "http://localhost:8000/rowers/api/workouts/"
-	apiv3_url = "http://localhost:8000/rowers/api/v3/workouts/"
-	apistrokedata_url = "http://localhost:8000/rowers/api/v2/workouts/%s/strokedata/"
+	config = oauth2.Config{}
+	apiworkouts_url string
+	apiv3_url string
+	apistrokedata_url string
 )
 
 var stoken string
@@ -73,9 +35,10 @@ type Config struct {
 	RedirectURL string `yaml:redirecturl`
 	AuthURL string `yaml:authurl`
 	TokenURL string `yaml:tokenurl`
-	ApiWorkouts string `yaml:apiworkouts`
-	ApiV3 string `yaml:apiv3`
-	ApiStrokeData string `yamml:apistrokedata`
+	ApiServer string `yaml:apiserver`
+	//	ApiWorkouts string `yaml:apiworkouts`
+	//	ApiV3 string `yaml:apiv3`
+	// ApiStrokeData string `yamml:apistrokedata`
 }
 
 // WorkoutBody defines json for workout
@@ -125,12 +88,6 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		log.Println("Homepage Hit!")
 	}
 	u := config.AuthCodeURL("xyz")
-	if instance == "dev" {
-		u = config_dev.AuthCodeURL("xyz")
-	}
-	if instance == "prod" {
-		u = config_prod.AuthCodeURL("xyz")
-	} 
 	http.Redirect(w, r, u, http.StatusFound)
 }
 
@@ -140,12 +97,6 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 		log.Println("Requesting Workouts")
 	}
 	url := apiworkouts_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/workouts/"
-	}
 
 	// Create a Bearer string by appending string access token
 	var bearer = fmt.Sprintf("Bearer %s", stoken)
@@ -464,15 +415,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u_config := config
-	if instance == "dev" {
-		u_config = config_dev
-	}
-	if instance == "prod" {
-		u_config = config_prod
-	}
-
-	token, err := u_config.Exchange(context.Background(), code)
+	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
 		log.Println("Error on token exchange\n", err)
 	}
@@ -495,7 +438,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 
 var instance = "local"
 var verbose = false
-var configfile = ""
+var configfile = "config.yaml"
 
 func main() {
 	stoken = "aap"
@@ -510,41 +453,62 @@ func main() {
 		log.Println(time.Now().Format(time.RFC3339))		
 	}
 
-	if len(configfile)>0 {
-		if verbose {
-			fmt.Println(configfile)
-		}
-		file, err := ioutil.ReadFile(configfile)
-		if err != nil {
-			log.Printf("yamlFile.Get err   #%v ", err)
-		}
-		newconfig := Config{}
-		err = yaml.Unmarshal([]byte(file), &newconfig)
-		if err != nil {
-			log.Printf("yamlFile.Get err   #%v ", err)
-		}
+	if verbose {
+		fmt.Println(configfile)
+	}
+	file, err := ioutil.ReadFile(configfile)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+		os.Exit(1)
+	}
+	newconfig := Config{}
+	err = yaml.Unmarshal([]byte(file), &newconfig)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+		os.Exit(1)
+	}
+	if verbose {
 		bodyyaml, _ := yaml.Marshal(newconfig)
-		if verbose {
-			fmt.Printf("%s \n", []byte(bodyyaml))
-		}
-		instance = "local"
-		config = oauth2.Config{
-			ClientID: newconfig.ClientID,
-			ClientSecret: newconfig.ClientSecret,
-			RedirectURL: newconfig.RedirectURL,
-			Endpoint: oauth2.Endpoint{
-				AuthURL: newconfig.AuthURL,
-				TokenURL: newconfig.TokenURL,
-			},
-		}
-		apiworkouts_url = newconfig.ApiWorkouts
-		apiv3_url = newconfig.ApiV3
-		apistrokedata_url = newconfig.ApiStrokeData
-		if verbose {
-			log.Println(apiworkouts_url)
-			log.Println(apiv3_url)
-			log.Println(apistrokedata_url)
-		}
+		fmt.Printf("%s \n", []byte(bodyyaml))
+	}
+	if newconfig.ClientSecret == "" {
+		log.Printf("no ClientSecret in config file")
+		os.Exit(1)
+	}
+	if newconfig.RedirectURL == "" {
+		log.Printf("no RedirectURL in config file")
+		os.Exit(1)
+	}
+	if newconfig.AuthURL == "" {
+		log.Printf("no AuthURL in config file")
+		os.Exit(1)
+	}
+	if newconfig.TokenURL == "" {
+		log.Printf("no TokenURL in config file")
+		os.Exit(1)
+	}
+	if newconfig.ApiServer == "" {
+		log.Printf("no  in config file")
+		os.Exit(1)
+	}
+
+	instance = "local"
+	config = oauth2.Config{
+		ClientID: newconfig.ClientID,
+		ClientSecret: newconfig.ClientSecret,
+		RedirectURL: newconfig.RedirectURL,
+		Endpoint: oauth2.Endpoint{
+			AuthURL: newconfig.AuthURL,
+			TokenURL: newconfig.TokenURL,
+		},
+	}
+	apiworkouts_url = newconfig.ApiServer+"/rowers/api/workouts/"
+	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
+	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
+	if verbose {
+		log.Println(apiworkouts_url)
+		log.Println(apiv3_url)
+		log.Println(apistrokedata_url)
 	}
 
 	// 1 - We attempt to hit our Homepage route

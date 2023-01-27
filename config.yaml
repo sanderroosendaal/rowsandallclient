@@ -4,6 +4,4 @@ clientsecret: LKiXu7dL1biHtM84kMtYZnGbcbokWJVyA0tVPc9laRWJjpzFaNwTZmYruN7iGH6wVY
 redirecturl: http://localhost:9094/oauth2
 authurl: http://localhost:8000/rowers/o/authorize/
 tokenurl: http://localhost:8000/rowers/o/token/
-apiworkouts: http://localhost:8000/rowers/api/workouts/
-apiv3: http://localhost:8000/rowers/api/v3/workouts/
-apistrokedata: http://localhost:8000/rowers/api/v2/workouts/%s/strokedata/
+apiserver: http://localhost:8000

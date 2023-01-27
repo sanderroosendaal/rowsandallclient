@@ -4,6 +4,4 @@ clientsecret: kjPq7OrR8THTGQZMFpsOo27n0uiDfI9HoxXhhbnbYWX9l2W34p6iESuLRu4VYuB58r
 redirecturl: http://rowingmonitor.fritz.box:9094/oauth2
 authurl: http://dunav.ngrok.io/rowers/o/authorize/
 tokenurl: http://dunav.ngrok.io/rowers/o/token/
-apiworkouts: http://dunav.ngrok.io/rowers/api/workouts/
-apiv3: http://dunav.ngrok.io/rowers/api/v3/workouts/
-apistrokedata: http://dunav.ngrok.io/rowers/api/v2/workouts/%s/strokedata/
+apiserver: http://dunav.ngrok.io
