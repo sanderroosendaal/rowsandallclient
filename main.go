@@ -33,8 +33,6 @@ type Config struct {
 	ClientID string `yaml:"clientid"`
 	ClientSecret string `yaml:"clientsecret"`
 	RedirectURL string `yaml:redirecturl`
-	AuthURL string `yaml:authurl`
-	TokenURL string `yaml:tokenurl`
 	ApiServer string `yaml:apiserver`
 	//	ApiWorkouts string `yaml:apiworkouts`
 	//	ApiV3 string `yaml:apiv3`
@@ -479,14 +477,6 @@ func main() {
 		log.Printf("no RedirectURL in config file")
 		os.Exit(1)
 	}
-	if newconfig.AuthURL == "" {
-		log.Printf("no AuthURL in config file")
-		os.Exit(1)
-	}
-	if newconfig.TokenURL == "" {
-		log.Printf("no TokenURL in config file")
-		os.Exit(1)
-	}
 	if newconfig.ApiServer == "" {
 		log.Printf("no  in config file")
 		os.Exit(1)
@@ -498,8 +488,8 @@ func main() {
 		ClientSecret: newconfig.ClientSecret,
 		RedirectURL: newconfig.RedirectURL,
 		Endpoint: oauth2.Endpoint{
-			AuthURL: newconfig.AuthURL,
-			TokenURL: newconfig.TokenURL,
+			AuthURL: newconfig.ApiServer+"/rowers/o/authorize/",
+			TokenURL: newconfig.ApiServer+"/rowers/o/token/",
 		},
 	}
 	apiworkouts_url = newconfig.ApiServer+"/rowers/api/workouts/"
