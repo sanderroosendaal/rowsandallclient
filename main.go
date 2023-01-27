@@ -26,8 +26,8 @@ var (
 	apistrokedata_url string
 )
 
-var stoken string
-var refreshtoken string
+var Stoken string
+var Refreshtoken string
 
 type Config struct {
 	ClientID string `yaml:"clientid"`
@@ -97,7 +97,7 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 	url := apiworkouts_url
 
 	// Create a Bearer string by appending string access token
-	var bearer = fmt.Sprintf("Bearer %s", stoken)
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	if verbose {
 		log.Println(bearer)
 	}
@@ -131,7 +131,7 @@ func StrokeDataV3(w http.ResponseWriter, r *http.Request) {
 		url = "https://rowsandall.com/rowers/api/v3/workouts/"
 	}
 
-	var bearer = fmt.Sprintf("Bearer %s", stoken)
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 
 	file, _ := ioutil.ReadFile("teststrokes2.json")
 	//file, _ := ioutil.ReadFile("RC-Upload-RAA.json")
@@ -181,7 +181,7 @@ func StrokeData(w http.ResponseWriter, r *http.Request) {
 		url = fmt.Sprintf("https://rowsandall.com/rowers/api/v2/workouts/%s/strokedata/", id)
 	}
 
-	var bearer = fmt.Sprintf("Bearer %s", stoken)
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 
 	file, _ := ioutil.ReadFile("teststrokes.json")
 	//file, _ := ioutil.ReadFile("RC-Upload-RAA.json")
@@ -230,7 +230,7 @@ func AddWorkout(w http.ResponseWriter, r *http.Request) {
 		url = "https://rowsandall.com/rowers/api/workouts/"
 	}
 
-	var bearer = fmt.Sprintf("Bearer %s", stoken)
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	if verbose {
 		log.Println(bearer)		
 	}
@@ -283,7 +283,7 @@ func WorkoutForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	var bearer = fmt.Sprintf("Bearer %s", stoken)
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	switch r.Method {
 	case "GET": {
 		http.ServeFile(w, r, "static/form.html")
@@ -417,12 +417,23 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error on token exchange\n", err)
 	}
-	stoken = token.AccessToken
-	refreshtoken = token.RefreshToken
+	authkeys.Stoken = token.AccessToken
+	authkeys.Refreshtoken = token.RefreshToken
+	bodyyaml, err := yaml.Marshal(authkeys)
+	fmt.Printf("%s \n", []byte(bodyyaml))
+
+	if err != nil {
+		fmt.Printf("Error while Marshaling. %v", err)
+	}
+	fileName := "tokens.yaml"
+	err = ioutil.WriteFile(fileName, bodyyaml, 0644)
+	if err != nil {
+		panic("Unable to write data into the file")
+	}
 
 	if verbose {
-		log.Println(stoken)
-		log.Println(refreshtoken)		
+		log.Println(Stoken)
+		log.Println(Refreshtoken)		
 	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -437,18 +448,36 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 var instance = "local"
 var verbose = false
 var configfile = "config.yaml"
+var authorized = false
+
+type keys struct {
+	Stoken string `yaml:"stoken"`
+	Refreshtoken string `yaml:"clientsecret"`
+}
+
+var authkeys = keys{}
 
 func main() {
-	stoken = "aap"
-	refreshtoken = "noot"
 	// flags
 	flag.BoolVar(&(verbose), "v", false, "use -v to set verbose")
 	flag.StringVar(&(instance), "i", "local", "use -i instance to set instance (local, dev, prod)")
 	flag.StringVar(&(configfile), "c", "config.yaml", "use -c instance to set redirect config file")
+	flag.BoolVar(&(authorized), "a", false, "use -a if you're already authorized")
 	flag.Parse()
 	if verbose {
 		log.Println(instance)
 		log.Println(time.Now().Format(time.RFC3339))		
+	}
+	if authorized {
+		file, err := ioutil.ReadFile("tokens.yaml")
+		if err != nil {
+			err = yaml.Unmarshal([]byte(file), &authkeys)
+			if err != nil {
+				authorized = false
+			}
+		} else {
+			authorized = false
+		}
 	}
 
 	if verbose {

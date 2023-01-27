@@ -6,6 +6,7 @@
 *.dylib
 config_fritz.yaml
 config_local.yaml
+tokens.yaml
 
 # Test binary, built with `go test -c`
 *.test
