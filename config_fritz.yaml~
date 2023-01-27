@@ -1,6 +1,0 @@
----
-clientid: YCQ1hVjdRECtin2NN75HHPjlni63uAHUWbgNEcGT
-clientsecret: LKiXu7dL1biHtM84kMtYZnGbcbokWJVyA0tVPc9laRWJjpzFaNwTZmYruN7iGH6wVYC1kiH9HbxekWGL59XLBY3AVew5R3xNKgPfwq8G1LNglrriyBRPZXKFQTdjxOCx
-redirecturl: http://localhost:9094/oauth2
-authurl: http://localhost:8000/rowers/o/authorize/
-tokenurl: http://localhost:8000/rowers/o/token/
