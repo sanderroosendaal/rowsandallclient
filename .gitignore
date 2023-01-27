@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+config_fritz.yaml
+config_local.yaml
 
 # Test binary, built with `go test -c`
 *.test
