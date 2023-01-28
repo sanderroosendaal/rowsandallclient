@@ -419,6 +419,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	authkeys.Stoken = token.AccessToken
 	authkeys.Refreshtoken = token.RefreshToken
+	authkeys.Expiry = token.Expiry
 	bodyyaml, err := yaml.Marshal(authkeys)
 	fmt.Printf("%s \n", []byte(bodyyaml))
 
@@ -453,6 +454,7 @@ var authorized = false
 type keys struct {
 	Stoken string `yaml:"stoken"`
 	Refreshtoken string `yaml:"clientsecret"`
+	Expiry time.Time `yaml:"expiry"`
 }
 
 var authkeys = keys{}
@@ -470,10 +472,15 @@ func main() {
 	}
 	if authorized {
 		file, err := ioutil.ReadFile("tokens.yaml")
-		if err != nil {
+		if err == nil {
 			err = yaml.Unmarshal([]byte(file), &authkeys)
 			if err != nil {
 				authorized = false
+				log.Printf("tokens error %v\n", err)
+			}
+			if verbose {
+				log.Printf("stoken %s\n",authkeys.Stoken)
+				log.Printf("refreshtoken %s\n",authkeys.Refreshtoken)
 			}
 		} else {
 			authorized = false
