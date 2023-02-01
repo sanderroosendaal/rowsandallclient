@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+rowsandallclient
+rowsandallclient-pi
 config_fritz.yaml
 config_local.yaml
 tokens.yaml
