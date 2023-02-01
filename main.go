@@ -462,7 +462,6 @@ var authkeys = keys{}
 func main() {
 	// flags
 	flag.BoolVar(&(verbose), "v", false, "use -v to set verbose")
-	flag.StringVar(&(instance), "i", "local", "use -i instance to set instance (local, dev, prod)")
 	flag.StringVar(&(configfile), "c", "config.yaml", "use -c instance to set redirect config file")
 	flag.BoolVar(&(authorized), "a", false, "use -a if you're already authorized")
 	flag.Parse()
