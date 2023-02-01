@@ -1,4 +1,4 @@
-#+OPTIONS: broken-links:t
+#+OPTIONS: broken-links:mark
 * Rowsandall Client
 ** Introduction
 
