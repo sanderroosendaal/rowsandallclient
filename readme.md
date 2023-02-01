@@ -44,12 +44,12 @@ Options:
 
 The client runs a web server on localhost:9094 with the following endpoints:
 
--   [BROKEN LINK: localhost:9094/] Homepage (redirects to authorization if not authorized)
--   [BROKEN LINK: localhost:9094/oauth2] Redirects to the Rowsandall site where you login and exchange the tokens
--   [BROKEN LINK: localhost:9094/workouts] Gets your workouts
--   [BROKEN LINK: localhost:9094/workout] Creates a new workout on Rowsandall, without stroke data (API v2)
--   [BROKEN LINK: localhost:9094/strokedata/{id}] Adds stroke data from teststrokes.json file to the created workout with ID {id}
--   [BROKEN LINK: localhost:9094/strokedatav3] Create Workout and add strokedata from teststrokes2.json (API v3)
--   [BROKEN LINK: localhost:9094/form] Allows you to upload a CSV file according to [https://github.com/sanderroosendaal/rowingdata#csv-file-standard](https://github.com/sanderroosendaal/rowingdata#csv-file-standard)
+-   <localhost:9094/>Homepage (redirects to authorization if not authorized)
+-   <localhost:9094/oauth2>Redirects to the Rowsandall site where you login and exchange the tokens
+-   <localhost:9094/workouts>Gets your workouts
+-   <localhost:9094/workout>Creates a new workout on Rowsandall, without stroke data (API v2)
+-   <localhost:9094/strokedata/{id}>Adds stroke data from teststrokes.json file to the created workout with ID {id}
+-   <localhost:9094/strokedatav3>Create Workout and add strokedata from teststrokes2.json (API v3)
+-   <localhost:9094/form>Allows you to upload a CSV file according to [https://github.com/sanderroosendaal/rowingdata#csv-file-standard](https://github.com/sanderroosendaal/rowingdata#csv-file-standard)
     and specify workout name and other fields, then uploads it to Rowsandall
 
