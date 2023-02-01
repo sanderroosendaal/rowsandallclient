@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Rowsandall Client](#org4689731)
-    1.  [Introduction](#org97b9cd3)
-    2.  [Run options and configuration](#org5ae5bea)
-    3.  [Using the client](#org18b2830)
+1.  [Rowsandall Client](#org1008df2)
+    1.  [Introduction](#org0704c72)
+    2.  [Run options and configuration](#orgc690bb2)
+    3.  [Using the client](#orge7cd2d0)
 
 
 
-<a id="org4689731"></a>
+<a id="org1008df2"></a>
 
 # Rowsandall Client
 
 
-<a id="org97b9cd3"></a>
+<a id="org0704c72"></a>
 
 ## Introduction
 
@@ -22,7 +22,7 @@ This is an example client demonstrating the Rowsandall API, see <https://rowsand
 The client demonstrates the v2 and v3 versions of the API.
 
 
-<a id="org5ae5bea"></a>
+<a id="orgc690bb2"></a>
 
 ## Run options and configuration
 
@@ -38,18 +38,18 @@ Options:
 -   a (authorized) Use the stored tokens from a tokens.yaml
 
 
-<a id="org18b2830"></a>
+<a id="orge7cd2d0"></a>
 
 ## Using the client
 
 The client runs a web server on localhost:9094 with the following endpoints:
 
--   <localhost:9094/>Homepage (redirects to authorization if not authorized)
--   <localhost:9094/oauth2>Redirects to the Rowsandall site where you login and exchange the tokens
--   <localhost:9094/workouts>Gets your workouts
--   <localhost:9094/workout>Creates a new workout on Rowsandall, without stroke data (API v2)
--   <localhost:9094/strokedata/{id}>Adds stroke data from teststrokes.json file to the created workout with ID {id}
--   <localhost:9094/strokedatav3>Create Workout and add strokedata from teststrokes2.json (API v3)
--   <localhost:9094/form>Allows you to upload a CSV file according to [https://github.com/sanderroosendaal/rowingdata#csv-file-standard](https://github.com/sanderroosendaal/rowingdata#csv-file-standard)
+-   localhost:9094/ Homepage (redirects to authorization if not authorized)
+-   localhost:9094/oauth2 Redirects to the Rowsandall site where you login and exchange the tokens
+-   localhost:9094/workouts Gets your workouts
+-   localhost:9094/workout Creates a new workout on Rowsandall, without stroke data (API v2)
+-   localhost:9094/strokedata/{id} Adds stroke data from teststrokes.json file to the created workout with ID {id}
+-   localhost:9094/strokedatav3 Create Workout and add strokedata from teststrokes2.json (API v3)
+-   localhost:9094/form Allows you to upload a CSV file according to [https://github.com/sanderroosendaal/rowingdata#csv-file-standard](https://github.com/sanderroosendaal/rowingdata#csv-file-standard)
     and specify workout name and other fields, then uploads it to Rowsandall
 
