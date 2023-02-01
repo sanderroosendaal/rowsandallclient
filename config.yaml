@@ -1,0 +1,5 @@
+---
+clientid: YourClientID
+clientsecret: YourClientSecret
+redirecturl: http://localhost:9094/oauth2
+apiserver: https://rowsandall.com
