@@ -23,6 +23,7 @@ var (
 	config = oauth2.Config{}
 	apiworkouts_url string
 	apiv3_url string
+	apiTCX_url string
 	apistrokedata_url string
 )
 
@@ -118,6 +119,47 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+}
+
+// StrokeData as TCX
+func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
+	url := apiTCX_url
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/TCX/workouts/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/TCX/workouts/"
+	}
+
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
+
+	xmlbody, _ := ioutil.ReadFile("tcxdata.tcx")
+
+	if verbose {
+		fmt.Printf("%s\n", []byte(xmlbody))
+	}
+
+	req, _ := http.NewRequest("POST",url, bytes.NewBuffer(xmlbody))
+	req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/xml")
+
+	command, _ := http2curl.GetCurlCommand(req)
+	if verbose {
+		fmt.Println(command)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response. \n[ERRO] -", err)
+	}
+	if verbose {
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	fmt.Fprintf(w, "%s", body)
 }
 
@@ -529,6 +571,7 @@ func main() {
 	}
 	apiworkouts_url = newconfig.ApiServer+"/rowers/api/workouts/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
+	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
 	if verbose {
 		log.Println(apiworkouts_url)
@@ -555,6 +598,8 @@ func main() {
 
 	http.HandleFunc("/strokedatav3", StrokeDataV3)
 
+	http.HandleFunc("/strokedataTCX", StrokeDataTCX)
+
 	http.HandleFunc("/form", WorkoutForm)
 
 	// 3 - We start up our Client on port 9094
@@ -566,6 +611,7 @@ func main() {
 	log.Println("/workout")
 	log.Println("/strokedata")
 	log.Println("/strokedatav3")
+	log.Println("/strokedataTCX")
 	log.Println("/form")
 	log.Fatal(http.ListenAndServe(":9094", nil))
 }
