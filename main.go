@@ -22,6 +22,7 @@ import (
 var (
 	config = oauth2.Config{}
 	apiworkouts_url string
+	apicourses_url string
 	apiv3_url string
 	apiTCX_url string
 	apistrokedata_url string
@@ -88,6 +89,38 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	u := config.AuthCodeURL("xyz")
 	http.Redirect(w, r, u, http.StatusFound)
+}
+
+// func Courses gets courses
+func Courses(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		log.Println("Requesting Courses")
+	}
+	url := apicourses_url
+	// Create a Bearer string by appending string access token
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
+	if verbose {
+		log.Println(bearer)
+	}
+	// Create a new request using http
+	req, err := http.NewRequest("GET", url, nil)
+
+	// add authorization header to the req
+	req.Header.Set("Authorization", bearer)
+
+	// Send req using http Client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response.\n[ERRO] -", err)
+	}
+	if verbose{
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+	
 }
 
 // Workouts get workouts
@@ -442,6 +475,7 @@ func WorkoutForm(w http.ResponseWriter, r *http.Request) {
 
 // Authorize to do authorization
 func Authorize(w http.ResponseWriter, r *http.Request) {
+        log.Println("Authorize")
 	r.ParseForm()
 	state := r.Form.Get("state")
 	if state != "xyz" {
@@ -570,6 +604,7 @@ func main() {
 		},
 	}
 	apiworkouts_url = newconfig.ApiServer+"/rowers/api/workouts/"
+	apicourses_url = newconfig.ApiServer+"/rowers/api/courses/kml/liked/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
@@ -589,6 +624,8 @@ func main() {
 	// token and expiry time that we get back
 	// from our Authorization server
 	http.HandleFunc("/oauth2", Authorize)
+
+	http.HandleFunc("/courses", Courses)
 
 	http.HandleFunc("/workouts", Workouts)
 
