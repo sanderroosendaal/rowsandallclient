@@ -1,0 +1,5 @@
+---
+clientid: d3EXkobGFIdWOWkPwgXyth8So3CdVTEQLZGVw8qh
+clientsecret: wCg2brL8wDXhXcUTRDqoWm2h4naw8WORNUDHHO5dQ1AqBR62w8qsCmYrucMJHGWJ36OXJZqhZwyAy4to92ACdlNo6jayipwG98eP5hdsc213zPSleJgOFilYAECvtjE2
+redirecturl: http://localhost:9094/oauth2
+apiserver: https://dev.rowsandall.com

@@ -473,6 +473,11 @@ func WorkoutForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Refresh to do refresh
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	log.Println("Refresh")
+}
+
 // Authorize to do authorization
 func Authorize(w http.ResponseWriter, r *http.Request) {
         log.Println("Authorize")
@@ -589,7 +594,7 @@ func main() {
 		os.Exit(1)
 	}
 	if newconfig.ApiServer == "" {
-		log.Printf("no  in config file")
+		log.Printf("no ApiServer in config file")
 		os.Exit(1)
 	}
 
@@ -612,6 +617,7 @@ func main() {
 		log.Println(apiworkouts_url)
 		log.Println(apiv3_url)
 		log.Println(apistrokedata_url)
+		log.Println(apiTCX_url)
 	}
 
 	// 1 - We attempt to hit our Homepage route
@@ -634,6 +640,8 @@ func main() {
 	http.HandleFunc("/strokedata", StrokeData)
 
 	http.HandleFunc("/strokedatav3", StrokeDataV3)
+
+	http.HandleFunc("/strokedataV3", StrokeDataV3)
 
 	http.HandleFunc("/strokedataTCX", StrokeDataTCX)
 
