@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 	"github.com/sanderroosendaal/gorow"
-
+	"mime/multipart"
 	"golang.org/x/oauth2"
 	"moul.io/http2curl"
 )
@@ -25,6 +25,7 @@ var (
 	apicourses_url string
 	apiv3_url string
 	apiTCX_url string
+	apirowingdata_url string
 	apistrokedata_url string
 )
 
@@ -40,6 +41,12 @@ type Config struct {
 	//	ApiV3 string `yaml:apiv3`
 	// ApiStrokeData string `yamml:apistrokedata`
 }
+
+type User struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+var user User
 
 // WorkoutBody defines json for workout
 type WorkoutBody struct {
@@ -194,6 +201,88 @@ func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	fmt.Fprintf(w, "%s", body)
+}
+
+// StrokeData as RowingData data file
+func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
+	url := apirowingdata_url
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/workout/upload/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/workout/upload/"
+	}
+
+	// Open the CSV file
+	csvfile, err := os.Open("testdata.csv")
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer csvfile.Close()
+
+	// Create a buffer to hold the multipart form data
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	// Add the CSV file to the form
+	part, err := writer.CreateFormFile("file", "data.csv")
+	if err != nil {
+		fmt.Printf("Error creating form file: %v\n", err)
+		return
+	}
+	// Copy the file content into the form file part
+	if _, err := io.Copy(part, csvfile); err != nil {
+		fmt.Printf("Error copying file: %v\n", err)
+		return
+	}
+	// Add additional form fields if needed
+	if err := writer.WriteField("field1", "value1"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+
+	// Close the writer to finalize the form data
+	if err := writer.Close(); err != nil {
+		fmt.Printf("Error closing writer: %v\n", err)
+		return
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", url, &body)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return
+	}
+
+	// Add headers
+	req.SetBasicAuth(user.Username, user.Password)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+
+	// get the CURL command
+	// command, _ := http2curl.GetCurlCommand(req)
+	//if verbose {
+	//	fmt.Println(command)
+	//}
+	
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return
+	}
+
+	// Print response
+	fmt.Printf("Response status: %s\n", resp.Status)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return
+	}
+	fmt.Fprintf(w, "Response body: %s\n", string(responseBody))
+
 }
 
 // StrokeData v3
@@ -570,11 +659,13 @@ func main() {
 	if verbose {
 		fmt.Println(configfile)
 	}
+	
 	file, err := ioutil.ReadFile(configfile)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 		os.Exit(1)
 	}
+	
 	newconfig := Config{}
 	err = yaml.Unmarshal([]byte(file), &newconfig)
 	if err != nil {
@@ -598,6 +689,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = yaml.Unmarshal([]byte(file), &user)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+		os.Exit(1)
+	}
+	if verbose {
+		bodyyaml, _ := yaml.Marshal(user)
+		fmt.Printf("%s \n", []byte(bodyyaml))
+		fmt.Printf("username %s\n", user.Username)
+		fmt.Printf("password %s\n", user.Password)
+	}
+
 	instance = "local"
 	config = oauth2.Config{
 		ClientID: newconfig.ClientID,
@@ -612,6 +715,7 @@ func main() {
 	apicourses_url = newconfig.ApiServer+"/rowers/api/courses/kml/liked/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
+	apirowingdata_url = newconfig.ApiServer+"/rowers/workout/upload/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
 	if verbose {
 		log.Println(apiworkouts_url)
@@ -644,6 +748,8 @@ func main() {
 	http.HandleFunc("/strokedataV3", StrokeDataV3)
 
 	http.HandleFunc("/strokedataTCX", StrokeDataTCX)
+	
+	http.HandleFunc("/strokedataRD", StrokeDataRD)
 
 	http.HandleFunc("/form", WorkoutForm)
 
@@ -657,6 +763,7 @@ func main() {
 	log.Println("/strokedata")
 	log.Println("/strokedatav3")
 	log.Println("/strokedataTCX")
+	log.Println("/strokedataRD")
 	log.Println("/form")
 	log.Fatal(http.ListenAndServe(":9094", nil))
 }
