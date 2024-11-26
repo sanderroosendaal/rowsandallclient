@@ -207,10 +207,10 @@ func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
 	url := apirowingdata_url
 	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/workout/upload/"		
+		url = "https://dev.rowsandall.com/rowers/api/rowingdata/workouts/"		
 	}
 	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/workout/upload/"
+		url = "https://rowsandall.com/rowers/api/rowingdata/workouts/"
 	}
 
 	// Open the CSV file
@@ -237,7 +237,11 @@ func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Add additional form fields if needed
-	if err := writer.WriteField("field1", "value1"); err != nil {
+	if err := writer.WriteField("boattype", "1x"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+	if err := writer.WriteField("workouttype", "rower"); err != nil {
 		fmt.Printf("Error adding form field: %v\n", err)
 		return
 	}
@@ -715,7 +719,7 @@ func main() {
 	apicourses_url = newconfig.ApiServer+"/rowers/api/courses/kml/liked/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
-	apirowingdata_url = newconfig.ApiServer+"/rowers/workout/upload/"
+	apirowingdata_url = newconfig.ApiServer+"/rowers/api/rowingdata/workouts/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
 	if verbose {
 		log.Println(apiworkouts_url)
