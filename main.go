@@ -26,6 +26,7 @@ var (
 	apiv3_url string
 	apiTCX_url string
 	apirowingdata_url string
+	apirowingdata_url_apikey string
 	apistrokedata_url string
 )
 
@@ -45,6 +46,7 @@ type Config struct {
 type User struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	APIKey string `yaml:"apikey"`
 }
 var user User
 
@@ -89,6 +91,38 @@ type Workout struct {
 }
 
 
+// Improved printCurlCommand
+func printCurlCommand(req *http.Request) {
+    // Start building the curl command
+    curl := fmt.Sprintf("curl -X %s '%s' \\\n", req.Method, req.URL.String())
+
+    // Add headers
+    for name, values := range req.Header {
+        for _, value := range values {
+            curl += fmt.Sprintf("  -H '%s: %s' \\\n", name, value)
+        }
+    }
+
+    // Handle multipart or JSON body
+    if req.Header.Get("Content-Type") == "multipart/form-data" {
+        curl += "  -F 'file=@data.csv' \\\n" // Replace file contents with filename
+        curl += "  -F 'boattype=1x' \\\n"  // Example form key-value pairs
+        curl += "  -F 'workouttype=rower' \n"
+    } else {
+        // If it's not a multipart request, print the raw body
+        if req.Body != nil {
+            bodyBytes, _ := io.ReadAll(req.Body)
+            req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Reset Body
+            if len(bodyBytes) > 0 {
+                curl += fmt.Sprintf("  -d '%s'\n", string(bodyBytes))
+            }
+        }
+    }
+
+    // Print the final command
+    fmt.Println("\nEquivalent curl command:")
+    fmt.Println(curl)
+}
 // HomePage serves home page
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if verbose{
@@ -269,6 +303,97 @@ func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
 	//if verbose {
 	//	fmt.Println(command)
 	//}
+	
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return
+	}
+
+	// Print response
+	fmt.Printf("Response status: %s\n", resp.Status)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return
+	}
+	fmt.Fprintf(w, "Response body: %s\n", string(responseBody))
+
+}
+
+// StrokeData as RowingData data file
+func StrokeDataRDAPI(w http.ResponseWriter, r *http.Request) {
+	url := apirowingdata_url_apikey
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/rowingdata/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/rowingdata/"
+	}
+
+	// Open the CSV file
+	csvfile, err := os.Open("testdata.csv")
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer csvfile.Close()
+
+	// Create a buffer to hold the multipart form data
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	// Add the CSV file to the form
+	part, err := writer.CreateFormFile("file", "data.csv")
+	if err != nil {
+		fmt.Printf("Error creating form file: %v\n", err)
+		return
+	}
+	// Copy the file content into the form file part
+	if _, err := io.Copy(part, csvfile); err != nil {
+		fmt.Printf("Error copying file: %v\n", err)
+		return
+	}
+	// Add additional form fields if needed
+	if err := writer.WriteField("boattype", "1x"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+	if err := writer.WriteField("workouttype", "rower"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+
+	// Close the writer to finalize the form data
+	if err := writer.Close(); err != nil {
+		fmt.Printf("Error closing writer: %v\n", err)
+		return
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", url, &body)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return
+	}
+
+	// Add headers
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", user.APIKey)
+	if verbose {
+		fmt.Printf("APIKey %s\n", user.APIKey)
+	}
+
+
+	// get the CURL command
+	//command, _ := http2curl.GetCurlCommand(req)
+	//if verbose {
+	//	fmt.Println(command)
+	//}
+
+	printCurlCommand(req)
 	
 	// Send the HTTP request
 	client := &http.Client{}
@@ -703,6 +828,7 @@ func main() {
 		fmt.Printf("%s \n", []byte(bodyyaml))
 		fmt.Printf("username %s\n", user.Username)
 		fmt.Printf("password %s\n", user.Password)
+		fmt.Printf("APIKey %s\n", user.APIKey)
 	}
 
 	instance = "local"
@@ -720,6 +846,7 @@ func main() {
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
 	apirowingdata_url = newconfig.ApiServer+"/rowers/api/rowingdata/workouts/"
+	apirowingdata_url_apikey = newconfig.ApiServer+"/rowers/api/rowingdata/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
 	if verbose {
 		log.Println(apiworkouts_url)
@@ -755,6 +882,8 @@ func main() {
 	
 	http.HandleFunc("/strokedataRD", StrokeDataRD)
 
+	http.HandleFunc("/strokedataRDAPI", StrokeDataRDAPI)
+
 	http.HandleFunc("/form", WorkoutForm)
 
 	// 3 - We start up our Client on port 9094
@@ -768,6 +897,7 @@ func main() {
 	log.Println("/strokedatav3")
 	log.Println("/strokedataTCX")
 	log.Println("/strokedataRD")
+	log.Println("/strokedataRDAPI")
 	log.Println("/form")
 	log.Fatal(http.ListenAndServe(":9094", nil))
 }
