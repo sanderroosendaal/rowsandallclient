@@ -91,38 +91,7 @@ type Workout struct {
 }
 
 
-// Improved printCurlCommand
-func printCurlCommand(req *http.Request) {
-    // Start building the curl command
-    curl := fmt.Sprintf("curl -X %s '%s' \\\n", req.Method, req.URL.String())
 
-    // Add headers
-    for name, values := range req.Header {
-        for _, value := range values {
-            curl += fmt.Sprintf("  -H '%s: %s' \\\n", name, value)
-        }
-    }
-
-    // Handle multipart or JSON body
-    if req.Header.Get("Content-Type") == "multipart/form-data" {
-        curl += "  -F 'file=@data.csv' \\\n" // Replace file contents with filename
-        curl += "  -F 'boattype=1x' \\\n"  // Example form key-value pairs
-        curl += "  -F 'workouttype=rower' \n"
-    } else {
-        // If it's not a multipart request, print the raw body
-        if req.Body != nil {
-            bodyBytes, _ := io.ReadAll(req.Body)
-            req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Reset Body
-            if len(bodyBytes) > 0 {
-                curl += fmt.Sprintf("  -d '%s'\n", string(bodyBytes))
-            }
-        }
-    }
-
-    // Print the final command
-    fmt.Println("\nEquivalent curl command:")
-    fmt.Println(curl)
-}
 // HomePage serves home page
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if verbose{
@@ -388,13 +357,11 @@ func StrokeDataRDAPI(w http.ResponseWriter, r *http.Request) {
 
 
 	// get the CURL command
-	//command, _ := http2curl.GetCurlCommand(req)
-	//if verbose {
-	//	fmt.Println(command)
-	//}
+	command, _ := http2curl.GetCurlCommand(req)
+	if verbose {
+		fmt.Println(command)
+	}
 
-	printCurlCommand(req)
-	
 	// Send the HTTP request
 	client := &http.Client{}
 	resp, err := client.Do(req)
