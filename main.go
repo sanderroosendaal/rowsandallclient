@@ -165,6 +165,47 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", body)
 }
 
+// Workouts get workouts
+func WorkoutsAPI(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		log.Println("Requesting Workouts")
+	}
+	url := apiworkouts_url
+
+	// Create a new request using http
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("Error creating GET request")
+		return
+	}
+
+	// Add Headers
+	req.Header.Set("Authorization", user.APIKey)
+	if verbose {
+		fmt.Printf("APIKey %s\n", user.APIKey)
+	}
+
+	// get the CURL command
+	command, _ := http2curl.GetCurlCommand(req)
+	if verbose {
+		fmt.Println(command)
+	}
+	
+
+	// Send req using http Client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response.\n[ERRO] -", err)
+	}
+	if verbose{
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+}
+
 // StrokeData as TCX
 func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 	url := apiTCX_url
@@ -836,6 +877,7 @@ func main() {
 	http.HandleFunc("/courses", Courses)
 
 	http.HandleFunc("/workouts", Workouts)
+	http.HandleFunc("/workoutsAPI", WorkoutsAPI)
 
 	http.HandleFunc("/workout", AddWorkout)
 
@@ -859,6 +901,7 @@ func main() {
 	log.Println("/")
 	log.Println("/oauth2")
 	log.Println("/workouts")
+	log.Println("/workoutsAPI")
 	log.Println("/workout")
 	log.Println("/strokedata")
 	log.Println("/strokedatav3")
