@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 	"github.com/sanderroosendaal/gorow"
-
+	"mime/multipart"
 	"golang.org/x/oauth2"
 	"moul.io/http2curl"
 )
@@ -22,8 +22,12 @@ import (
 var (
 	config = oauth2.Config{}
 	apiworkouts_url string
+	apicourses_url string
 	apiv3_url string
+	apiFIT_url string
 	apiTCX_url string
+	apirowingdata_url string
+	apirowingdata_url_apikey string
 	apistrokedata_url string
 )
 
@@ -39,6 +43,13 @@ type Config struct {
 	//	ApiV3 string `yaml:apiv3`
 	// ApiStrokeData string `yamml:apistrokedata`
 }
+
+type User struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	APIKey string `yaml:"apikey"`
+}
+var user User
 
 // WorkoutBody defines json for workout
 type WorkoutBody struct {
@@ -81,6 +92,7 @@ type Workout struct {
 }
 
 
+
 // HomePage serves home page
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	if verbose{
@@ -88,6 +100,38 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	u := config.AuthCodeURL("xyz")
 	http.Redirect(w, r, u, http.StatusFound)
+}
+
+// func Courses gets courses
+func Courses(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		log.Println("Requesting Courses")
+	}
+	url := apicourses_url
+	// Create a Bearer string by appending string access token
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
+	if verbose {
+		log.Println(bearer)
+	}
+	// Create a new request using http
+	req, err := http.NewRequest("GET", url, nil)
+
+	// add authorization header to the req
+	req.Header.Set("Authorization", bearer)
+
+	// Send req using http Client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response.\n[ERRO] -", err)
+	}
+	if verbose{
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+	
 }
 
 // Workouts get workouts
@@ -119,6 +163,81 @@ func Workouts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+}
+
+// Workouts get workouts
+func WorkoutsAPI(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		log.Println("Requesting Workouts")
+	}
+	url := apiworkouts_url
+	if verbose {
+		log.Println(apiworkouts_url)
+	}
+	// Create a new request using http
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("Error creating GET request")
+		return
+	}
+
+	// Add Headers
+	req.Header.Set("Authorization", user.APIKey)
+	if verbose {
+		fmt.Printf("APIKey %s\n", user.APIKey)
+	}
+
+	// get the CURL command
+	command, _ := http2curl.GetCurlCommand(req)
+	if verbose {
+		fmt.Println(command)
+	}
+	
+
+	// Send req using http Client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response.\n[ERRO] -", err)
+	}
+	if verbose{
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+}
+
+// StrokeData as FIT
+func StrokeDataFIT(w http.ResponseWriter, r *http.Request) {
+	url := apiFIT_url
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/FIT/workouts/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/FIT/workouts/"
+	}
+
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
+	fitbody, _ := ioutil.ReadFile("fitdata.fit")
+
+	req, _ := http.NewRequest("POST",url, bytes.NewBuffer(fitbody))
+	req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/octet-stream")
+
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response. \n[ERRO] -", err)
+	}
+	if verbose {
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	fmt.Fprintf(w, "%s", body)
 }
 
@@ -161,6 +280,181 @@ func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	fmt.Fprintf(w, "%s", body)
+}
+
+// StrokeData as RowingData data file
+func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
+	url := apirowingdata_url
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/rowingdata/workouts/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/rowingdata/workouts/"
+	}
+
+	// Open the CSV file
+	csvfile, err := os.Open("testdata.csv")
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer csvfile.Close()
+
+	// Create a buffer to hold the multipart form data
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	// Add the CSV file to the form
+	part, err := writer.CreateFormFile("file", "data.csv")
+	if err != nil {
+		fmt.Printf("Error creating form file: %v\n", err)
+		return
+	}
+	// Copy the file content into the form file part
+	if _, err := io.Copy(part, csvfile); err != nil {
+		fmt.Printf("Error copying file: %v\n", err)
+		return
+	}
+	// Add additional form fields if needed
+	if err := writer.WriteField("boattype", "1x"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+	if err := writer.WriteField("workouttype", "rower"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+
+	// Close the writer to finalize the form data
+	if err := writer.Close(); err != nil {
+		fmt.Printf("Error closing writer: %v\n", err)
+		return
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", url, &body)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return
+	}
+
+	// Add headers
+	req.SetBasicAuth(user.Username, user.Password)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+
+	// get the CURL command
+	// command, _ := http2curl.GetCurlCommand(req)
+	//if verbose {
+	//	fmt.Println(command)
+	//}
+	
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return
+	}
+
+	// Print response
+	fmt.Printf("Response status: %s\n", resp.Status)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return
+	}
+	fmt.Fprintf(w, "Response body: %s\n", string(responseBody))
+
+}
+
+// StrokeData as RowingData data file
+func StrokeDataRDAPI(w http.ResponseWriter, r *http.Request) {
+	url := apirowingdata_url_apikey
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/rowingdata/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/rowingdata/"
+	}
+
+	// Open the CSV file
+	csvfile, err := os.Open("testdata.csv")
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer csvfile.Close()
+
+	// Create a buffer to hold the multipart form data
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	// Add the CSV file to the form
+	part, err := writer.CreateFormFile("file", "data.csv")
+	if err != nil {
+		fmt.Printf("Error creating form file: %v\n", err)
+		return
+	}
+	// Copy the file content into the form file part
+	if _, err := io.Copy(part, csvfile); err != nil {
+		fmt.Printf("Error copying file: %v\n", err)
+		return
+	}
+	// Add additional form fields if needed
+	if err := writer.WriteField("boattype", "1x"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+	if err := writer.WriteField("workouttype", "rower"); err != nil {
+		fmt.Printf("Error adding form field: %v\n", err)
+		return
+	}
+
+	// Close the writer to finalize the form data
+	if err := writer.Close(); err != nil {
+		fmt.Printf("Error closing writer: %v\n", err)
+		return
+	}
+
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", url, &body)
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return
+	}
+
+	// Add headers
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", user.APIKey)
+	if verbose {
+		fmt.Printf("APIKey %s\n", user.APIKey)
+	}
+
+
+	// get the CURL command
+	command, _ := http2curl.GetCurlCommand(req)
+	if verbose {
+		fmt.Println(command)
+	}
+
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error making request: %v\n", err)
+		return
+	}
+
+	// Print response
+	fmt.Printf("Response status: %s\n", resp.Status)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return
+	}
+	fmt.Fprintf(w, "Response body: %s\n", string(responseBody))
+
 }
 
 // StrokeData v3
@@ -440,8 +734,14 @@ func WorkoutForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Refresh to do refresh
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	log.Println("Refresh")
+}
+
 // Authorize to do authorization
 func Authorize(w http.ResponseWriter, r *http.Request) {
+        log.Println("Authorize")
 	r.ParseForm()
 	state := r.Form.Get("state")
 	if state != "xyz" {
@@ -531,11 +831,13 @@ func main() {
 	if verbose {
 		fmt.Println(configfile)
 	}
+	
 	file, err := ioutil.ReadFile(configfile)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 		os.Exit(1)
 	}
+	
 	newconfig := Config{}
 	err = yaml.Unmarshal([]byte(file), &newconfig)
 	if err != nil {
@@ -555,8 +857,21 @@ func main() {
 		os.Exit(1)
 	}
 	if newconfig.ApiServer == "" {
-		log.Printf("no  in config file")
+		log.Printf("no ApiServer in config file")
 		os.Exit(1)
+	}
+
+	err = yaml.Unmarshal([]byte(file), &user)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+		os.Exit(1)
+	}
+	if verbose {
+		bodyyaml, _ := yaml.Marshal(user)
+		fmt.Printf("%s \n", []byte(bodyyaml))
+		fmt.Printf("username %s\n", user.Username)
+		fmt.Printf("password %s\n", user.Password)
+		fmt.Printf("APIKey %s\n", user.APIKey)
 	}
 
 	instance = "local"
@@ -570,13 +885,19 @@ func main() {
 		},
 	}
 	apiworkouts_url = newconfig.ApiServer+"/rowers/api/workouts/"
+	apicourses_url = newconfig.ApiServer+"/rowers/api/courses/kml/liked/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
+	apiFIT_url = newconfig.ApiServer+"/rowers/api/FIT/workouts/"
+	apirowingdata_url = newconfig.ApiServer+"/rowers/api/rowingdata/workouts/"
+	apirowingdata_url_apikey = newconfig.ApiServer+"/rowers/api/rowingdata/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
 	if verbose {
 		log.Println(apiworkouts_url)
 		log.Println(apiv3_url)
 		log.Println(apistrokedata_url)
+		log.Println(apiTCX_url)
+		log.Println(apiFIT_url)
 	}
 
 	// 1 - We attempt to hit our Homepage route
@@ -590,7 +911,10 @@ func main() {
 	// from our Authorization server
 	http.HandleFunc("/oauth2", Authorize)
 
+	http.HandleFunc("/courses", Courses)
+
 	http.HandleFunc("/workouts", Workouts)
+	http.HandleFunc("/workoutsAPI", WorkoutsAPI)
 
 	http.HandleFunc("/workout", AddWorkout)
 
@@ -598,7 +922,15 @@ func main() {
 
 	http.HandleFunc("/strokedatav3", StrokeDataV3)
 
+	http.HandleFunc("/strokedataV3", StrokeDataV3)
+
 	http.HandleFunc("/strokedataTCX", StrokeDataTCX)
+	
+	http.HandleFunc("/strokedataFIT", StrokeDataFIT)
+	
+	http.HandleFunc("/strokedataRD", StrokeDataRD)
+
+	http.HandleFunc("/strokedataRDAPI", StrokeDataRDAPI)
 
 	http.HandleFunc("/form", WorkoutForm)
 
@@ -608,10 +940,14 @@ func main() {
 	log.Println("/")
 	log.Println("/oauth2")
 	log.Println("/workouts")
+	log.Println("/workoutsAPI")
 	log.Println("/workout")
 	log.Println("/strokedata")
 	log.Println("/strokedatav3")
 	log.Println("/strokedataTCX")
+	log.Println("/strokedataFIT")
+	log.Println("/strokedataRD")
+	log.Println("/strokedataRDAPI")
 	log.Println("/form")
 	log.Fatal(http.ListenAndServe(":9094", nil))
 }
