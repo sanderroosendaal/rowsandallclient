@@ -9,6 +9,8 @@ rowsandallclient-pi
 config_fritz.yaml
 config_local.yaml
 config_crewnerd.yaml
+config_dev.yaml
+config_prod.yaml
 tokens.yaml
 *.*~
 
