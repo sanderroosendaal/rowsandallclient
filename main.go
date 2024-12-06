@@ -24,6 +24,7 @@ var (
 	apiworkouts_url string
 	apicourses_url string
 	apiv3_url string
+	apiFIT_url string
 	apiTCX_url string
 	apirowingdata_url string
 	apirowingdata_url_apikey string
@@ -171,7 +172,9 @@ func WorkoutsAPI(w http.ResponseWriter, r *http.Request) {
 		log.Println("Requesting Workouts")
 	}
 	url := apiworkouts_url
-
+	if verbose {
+		log.Println(apiworkouts_url)
+	}
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -203,6 +206,38 @@ func WorkoutsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Fprintf(w, "%s", body)
+}
+
+// StrokeData as FIT
+func StrokeDataFIT(w http.ResponseWriter, r *http.Request) {
+	url := apiFIT_url
+	if instance == "dev" {
+		url = "https://dev.rowsandall.com/rowers/api/FIT/workouts/"		
+	}
+	if instance == "prod" {
+		url = "https://rowsandall.com/rowers/api/FIT/workouts/"
+	}
+
+	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
+	fitbody, _ := ioutil.ReadFile("fitdata.fit")
+
+	req, _ := http.NewRequest("POST",url, bytes.NewBuffer(fitbody))
+	req.Header.Set("Authorization", bearer)
+	req.Header.Add("Content-Type", "application/octet-stream")
+
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error on response. \n[ERRO] -", err)
+	}
+	if verbose {
+		fmt.Printf("Response code %v\n", resp.StatusCode)
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	fmt.Fprintf(w, "%s", body)
 }
 
@@ -853,6 +888,7 @@ func main() {
 	apicourses_url = newconfig.ApiServer+"/rowers/api/courses/kml/liked/"
 	apiv3_url = newconfig.ApiServer+"/rowers/api/v3/workouts/"
 	apiTCX_url = newconfig.ApiServer+"/rowers/api/TCX/workouts/"
+	apiFIT_url = newconfig.ApiServer+"/rowers/api/FIT/workouts/"
 	apirowingdata_url = newconfig.ApiServer+"/rowers/api/rowingdata/workouts/"
 	apirowingdata_url_apikey = newconfig.ApiServer+"/rowers/api/rowingdata/"
 	apistrokedata_url = newconfig.ApiServer+"/rowers/api/v2/workouts/%s/strokedata/"
@@ -861,6 +897,7 @@ func main() {
 		log.Println(apiv3_url)
 		log.Println(apistrokedata_url)
 		log.Println(apiTCX_url)
+		log.Println(apiFIT_url)
 	}
 
 	// 1 - We attempt to hit our Homepage route
@@ -889,6 +926,8 @@ func main() {
 
 	http.HandleFunc("/strokedataTCX", StrokeDataTCX)
 	
+	http.HandleFunc("/strokedataFIT", StrokeDataFIT)
+	
 	http.HandleFunc("/strokedataRD", StrokeDataRD)
 
 	http.HandleFunc("/strokedataRDAPI", StrokeDataRDAPI)
@@ -906,6 +945,7 @@ func main() {
 	log.Println("/strokedata")
 	log.Println("/strokedatav3")
 	log.Println("/strokedataTCX")
+	log.Println("/strokedataFIT")
 	log.Println("/strokedataRD")
 	log.Println("/strokedataRDAPI")
 	log.Println("/form")
