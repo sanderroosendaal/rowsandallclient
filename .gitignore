@@ -11,7 +11,10 @@ config_local.yaml
 config_crewnerd.yaml
 config_dev.yaml
 config_prod.yaml
+<<<<<<< HEAD
 *.*~
+=======
+>>>>>>> release/v0.8
 tokens.yaml
 *.*~
 
