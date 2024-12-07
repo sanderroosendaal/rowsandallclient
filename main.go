@@ -212,13 +212,6 @@ func WorkoutsAPI(w http.ResponseWriter, r *http.Request) {
 // StrokeData as FIT
 func StrokeDataFIT(w http.ResponseWriter, r *http.Request) {
 	url := apiFIT_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/FIT/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/FIT/workouts/"
-	}
-
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	fitbody, _ := ioutil.ReadFile("fitdata.fit")
 
@@ -244,13 +237,6 @@ func StrokeDataFIT(w http.ResponseWriter, r *http.Request) {
 // StrokeData as TCX
 func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 	url := apiTCX_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/TCX/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/TCX/workouts/"
-	}
-
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 
 	xmlbody, _ := ioutil.ReadFile("tcxdata.tcx")
@@ -285,13 +271,6 @@ func StrokeDataTCX(w http.ResponseWriter, r *http.Request) {
 // StrokeData as RowingData data file
 func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
 	url := apirowingdata_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/rowingdata/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/rowingdata/workouts/"
-	}
-
 	// Open the CSV file
 	csvfile, err := os.Open("testdata.csv")
 	if err != nil {
@@ -371,13 +350,6 @@ func StrokeDataRD(w http.ResponseWriter, r *http.Request) {
 // StrokeData as RowingData data file
 func StrokeDataRDAPI(w http.ResponseWriter, r *http.Request) {
 	url := apirowingdata_url_apikey
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/rowingdata/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/rowingdata/"
-	}
-
 	// Open the CSV file
 	csvfile, err := os.Open("testdata.csv")
 	if err != nil {
@@ -460,13 +432,6 @@ func StrokeDataRDAPI(w http.ResponseWriter, r *http.Request) {
 // StrokeData v3
 func StrokeDataV3(w http.ResponseWriter, r *http.Request) {
 	url := apiv3_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/v3/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/v3/workouts/"
-	}
-
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 
 	file, _ := ioutil.ReadFile("teststrokes2.json")
@@ -510,13 +475,6 @@ func StrokeData(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(id)
 	}
 	url := fmt.Sprintf(apistrokedata_url, id)
-	if instance == "dev" {
-		url = fmt.Sprintf("https://dev.rowsandall.com/rowers/api/v2/workouts/%s/strokedata/", id)
-	}
-	if instance == "prod" {
-		url = fmt.Sprintf("https://rowsandall.com/rowers/api/v2/workouts/%s/strokedata/", id)
-	}
-
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 
 	file, _ := ioutil.ReadFile("teststrokes.json")
@@ -559,13 +517,6 @@ func AddWorkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := apiworkouts_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/workouts/"
-	}
-
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	if verbose {
 		log.Println(bearer)		
@@ -611,13 +562,6 @@ func AddWorkout(w http.ResponseWriter, r *http.Request) {
 
 func WorkoutForm(w http.ResponseWriter, r *http.Request) {
 	url := apiv3_url
-	if instance == "dev" {
-		url = "https://dev.rowsandall.com/rowers/api/v3/workouts/"		
-	}
-	if instance == "prod" {
-		url = "https://rowsandall.com/rowers/api/v3/workouts/"		
-	}
-
 
 	var bearer = fmt.Sprintf("Bearer %s", authkeys.Stoken)
 	switch r.Method {
@@ -758,6 +702,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
 		log.Println("Error on token exchange\n", err)
+		return
 	}
 	authkeys.Stoken = token.AccessToken
 	authkeys.Refreshtoken = token.RefreshToken
@@ -872,6 +817,8 @@ func main() {
 		fmt.Printf("username %s\n", user.Username)
 		fmt.Printf("password %s\n", user.Password)
 		fmt.Printf("APIKey %s\n", user.APIKey)
+		fmt.Printf("clientid %s\n", newconfig.ClientID)
+		fmt.Printf("clientsecret %s\n", newconfig.ClientSecret)
 	}
 
 	instance = "local"
